@@ -20,13 +20,15 @@ class VertxHttpExecutor(val client:WebClient, action:Option[HttpRequestAction]) 
     val mapper = new HttpResponseMapper(this.action.getOrElse(new HttpRequestAction("", Methods.GET, "", client)), response)
     val action = mapper.exec()
 
+    val port = if(action.url.getPort <= 0) 80 else action.url.getPort
+
     // creates the request object
     val request = action.method match {
-      case Methods.GET => client.get(action.url.getPort, action.url.getHost, action.url.getPath)
-      case Methods.POST => client.post(action.url.getPort, action.url.getHost, action.url.getPath)
-      case Methods.PUT => client.put(action.url.getPort, action.url.getHost, action.url.getPath)
-      case Methods.DELETE => client.delete(action.url.getPort, action.url.getHost, action.url.getPath)
-      case Methods.HEAD => client.head(action.url.getPort, action.url.getHost, action.url.getPath)
+      case Methods.GET => client.get(port, action.url.getHost, action.url.getPath)
+      case Methods.POST => client.post(port, action.url.getHost, action.url.getPath)
+      case Methods.PUT => client.put(port, action.url.getHost, action.url.getPath)
+      case Methods.DELETE => client.delete(port, action.url.getHost, action.url.getPath)
+      case Methods.HEAD => client.head(port, action.url.getHost, action.url.getPath)
       case Methods.OPTIONS => ???
     }
 
