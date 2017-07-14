@@ -1,11 +1,13 @@
 package scheduler.workflows.actions
 
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonArray
 import io.vertx.lang.scala.json.JsonObject
+import io.vertx.scala.ext.web.client.HttpResponse
 import scheduler.workflows.executors.Executor
 import scheduler.workflows.executors.VertxHttpExecutor.VertxRespType
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.collection.JavaConverters._
 
 /**
@@ -15,11 +17,11 @@ import scala.collection.JavaConverters._
   * Crashes if previous Action has no data!
   */
 case class PrintResponseAction(override val name:String,
-                               override val next: Option[List[AbstractAction[Option[VertxRespType], VertxRespType]]] = None,
-                               override val predecessor: Option[AbstractAction[Option[VertxRespType], VertxRespType]] = None,
-                               override val mappings: Option[String] = None) extends AbstractAction[Option[VertxRespType], VertxRespType] {
+                               override val next: Option[List[AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]]]] = None,
+                               override val predecessor: Option[AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]]] = None,
+                               override val mappings: Option[String] = None) extends AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]] {
 
-  override val executor: Option[Executor[Option[VertxRespType], VertxRespType]] = None
+  override val executor: Option[Executor[Option[VertxRespType], HttpResponse[Buffer]]] = None
 
   override val actionType: String = PrintResponseAction.actionType
 
@@ -46,9 +48,9 @@ case class PrintResponseAction(override val name:String,
     prevData.get
   }
 
-  override def predecessor(newPredecessor: AbstractAction[Option[VertxRespType], VertxRespType]): AbstractAction[Option[VertxRespType], VertxRespType] = PrintResponseAction(name, next, Some(newPredecessor))
+  override def predecessor(newPredecessor: AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]]): AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]] = PrintResponseAction(name, next, Some(newPredecessor))
 
-  def next(abstractAction: AbstractAction[Option[VertxRespType], VertxRespType]):AbstractAction[Option[VertxRespType], VertxRespType] = {
+  def next(abstractAction: AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]]):AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]] = {
     val newNext = this.next match {
       case None => List(abstractAction)
       case Some(actions) => actions :+ abstractAction
@@ -59,7 +61,7 @@ case class PrintResponseAction(override val name:String,
 
   override def asJson: JsonObject = new JsonObject().put("type", PrintResponseAction.actionType).put("name", this.name).put("next", this.next.getOrElse(List()).foldLeft(new JsonArray())((prev, elem) => prev.add(elem.asJson)))
 
-  override def mappings(newMappings: String): AbstractAction[Option[VertxRespType], VertxRespType] = new PrintResponseAction(name, next, predecessor, Some(newMappings))
+  override def mappings(newMappings: String): AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]] = new PrintResponseAction(name, next, predecessor, Some(newMappings))
 }
 
 object PrintResponseAction {

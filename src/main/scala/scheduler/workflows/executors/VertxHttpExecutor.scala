@@ -6,19 +6,19 @@ import io.vertx.core.buffer.Buffer
 import io.vertx.scala.ext.web.client.{HttpResponse, WebClient}
 import scheduler.workflows.actions.HttpRequestAction
 import scheduler.workflows.executors.VertxHttpExecutor.VertxRespType
-import scheduler.workflows.mappers.HttpResponseMapper
+import scheduler.workflows.mappers.{AbstractMapper, HttpResponseMapper}
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * Created by Sascha on 26.05.2017.
   */
-class VertxHttpExecutor(val client:WebClient, action:Option[HttpRequestAction]) extends Executor[Option[VertxRespType], VertxRespType] {
-  override def execute(data:Option[VertxRespType]):VertxRespType = {
+class VertxHttpExecutor(val client:WebClient, action:Option[HttpRequestAction]) extends Executor[Option[VertxRespType], HttpResponse[Buffer]] {
+  override def execute(data:Option[VertxRespType]):Future[HttpResponse[Buffer]] = {
     val response = Ops.ifNotNone(data, () => (Await.result(data.get, 10 seconds)))
-    val mapper = new HttpResponseMapper(this.action.getOrElse(new HttpRequestAction("", Methods.GET, "", client)), response)
-    val action = mapper.exec()
+    val mapper:AbstractMapper[_,_,_] = getMapperInstance(this.action.get.mapper, response, this.action.get, new HttpResponseMapper(this.action.get, response.asInstanceOf[Option[HttpResponse[Buffer]]]))
+    val action = mapper.exec().asInstanceOf[HttpRequestAction]
 
     val port = if(action.url.getPort <= 0) 80 else action.url.getPort
 

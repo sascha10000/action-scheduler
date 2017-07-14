@@ -71,7 +71,7 @@ the *POST* request. It is also possible to use more complex functions here -- bu
 The **from** field can be filled with **request.body**, **request.param**, **request.header**, **response.body** and **response.header**.
 And you can set the **to** field to **body**, **header** and **param**.
 
-\\TODO example with mapping-functions, example with params/headers.
+\\TODO example with mapping-functions; example with params/headers; example with scheduling;
 
 ### Basic Model
 The whole model centers around the AbstractAction class. It defines a generic Action. And contains

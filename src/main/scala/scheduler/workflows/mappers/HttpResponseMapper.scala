@@ -10,14 +10,14 @@ import io.vertx.lang.scala.json.JsonObject
 import io.vertx.scala.ext.web.client.HttpResponse
 import scheduler.workflows.actions.{AbstractAction, HttpRequestAction}
 import scheduler.workflows.executors.VertxHttpExecutor.VertxRespType
-import scheduler.workflows.mappers.functions._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Future
 
 /**
   * Created by Sascha on 29.05.2017.
   */
-class HttpResponseMapper(override val action:HttpRequestAction, override val input:Option[HttpResponse[Buffer]]) extends AbstractMapper[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]]{
+class HttpResponseMapper(val action:HttpRequestAction, override val input:Option[HttpResponse[Buffer]]) extends AbstractMapper[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]](action){
   import HttpResponseMapper._
   override val inAction = resolvePredecessor(action)
 
@@ -26,7 +26,8 @@ class HttpResponseMapper(override val action:HttpRequestAction, override val inp
     * @param action
     * @return
     */
-  def resolvePredecessor[T](action:AbstractAction[Option[VertxRespType], VertxRespType]):Option[AbstractAction[Option[VertxRespType], VertxRespType]] = {
+  @Override
+  override def resolvePredecessor(action:AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]]):Option[AbstractAction[Option[VertxRespType], VertxRespType, HttpResponse[Buffer]]] = {
     if(action.predecessor.isEmpty) None
     else if(action.predecessor.get.isInstanceOf[HttpRequestAction])
       action.predecessor
@@ -38,6 +39,7 @@ class HttpResponseMapper(override val action:HttpRequestAction, override val inp
     *
     * @return the modified action with the transformed to fields
     */
+  @Override
   override def exec(): HttpRequestAction = if(action.mappings.isDefined && inAction.isDefined && input.isDefined){
     val inAction = this.inAction.get.asInstanceOf[HttpRequestAction]
     val jsonar = new JsonArray(action.mappings.get)
@@ -141,26 +143,6 @@ class HttpResponseMapper(override val action:HttpRequestAction, override val inp
   }
   else {
     action
-  }
-
-  private def map[T](json:JsonObject, input:T):String = {
-    val nextInput = (json.getString("type") match {
-      case JsonExtractor.functionType => JsonExtractor(input.asInstanceOf[String], json.attributesAsMap())
-      case MapExtractor.functionType => new MapExtractor(input.asInstanceOf[Map[String, String]], json.attributesAsMap())
-      case PlaceholderReplacer.functionType => PlaceholderReplacer(input.asInstanceOf[String], json.attributesAsMap())
-      case StringReplacer.functionType => StringReplacer(input.asInstanceOf[String], json.attributesAsMap())
-      case JsonMerger.functionType => JsonMerger(input.asInstanceOf[String], json.attributesAsMap())
-      case JsonFieldReplacer.functionType => JsonFieldReplacer(input.asInstanceOf[String], json.attributesAsMap())
-      case JsonArrayResetter.functionType => JsonArrayResetter(input.asInstanceOf[String], json.attributesAsMap())
-    }).t()
-
-    val next = json.asOption[JsonObject]("function")
-
-    if(next.isEmpty)
-      nextInput
-    else {
-      map(next.get, nextInput)
-    }
   }
 }
 
