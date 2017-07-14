@@ -1,0 +1,119 @@
+{
+  "example mapping":
+    [{
+      "from" : "response.body", "to": { "field": "url" },
+      "fromFunction":{
+        "type" : "JsonExtractor",
+        "jsonp": "$.name"
+      },
+      "toFunction": {
+        "type" : "PlaceholderReplacer",
+        "replace": "name",
+        "replaceWith" : "$#from#$"
+      }
+    }],
+
+"example action":
+{
+  "type" : "HttpRequestAction",
+  "name" : "Post Parsed Action",
+  "method" : "POST",
+  "url" : "http://localhost:3000/person",
+  "body" : "{\"name\":\"Max\",\"knows\":[],\"items\":[]}",
+  "mappings" : [ ],
+  "params" : [ {
+    "attribute" : "TEST3",
+    "value" : "TEST3"
+  }, {
+    "attribute" : "TEST4",
+    "value" : "TEST4"
+  } ],
+  "headers" : [ {
+    "attribute" : "TEST1",
+    "value" : "TEST1"
+  }, {
+    "attribute" : "TEST2",
+    "value" : "TEST2"
+  } ],
+  "next" : [ ]
+},
+
+"checklist action":
+{
+  "type" : "HttpRequestAction",
+  "name" : "GET Checklist",
+  "method" : "GET",
+  "url" : "http://localhost:8081/checklists",
+  "body" : "",
+  "mappings" : [ ],
+  "params" : [],
+  "next" : [
+    {
+      "type": "PrintResponseAction",
+      "name": "Print GET Checklist"
+    }
+  ]
+},
+
+
+ "example schedule":
+  {
+    "name" : "some test job",
+    "schedule" : "/5 * * ? * *",
+    "actions": [
+      {
+        "type" : "HttpRequestAction",
+        "name" : "Post Parsed Action",
+        "method" : "POST",
+        "url" : "http://localhost:3000/person",
+        "body" : "{\"name\":\"Max\",\"knows\":[],\"items\":[]}",
+        "mappings" : [{
+          "from" : "response.body", "to": { "field": "url" },
+          "fromFunction":{
+            "type" : "JsonExtractor",
+            "jsonp": "$.name"
+          },
+          "toFunction": {
+            "type" : "PlaceholderReplacer",
+            "replace": "name",
+            "replaceWith" : "$#from#$"
+          }
+        }],
+        "params" : [ {
+          "attribute" : "TEST3",
+          "value" : "TEST3"
+        }, {
+          "attribute" : "TEST4",
+          "value" : "TEST4"
+        } ],
+        "headers" : [ {
+          "attribute" : "TEST1",
+          "value" : "TEST1"
+        }, {
+          "attribute" : "TEST2",
+          "value" : "TEST2"
+        } ],
+        "next" : [ ]
+      }
+    ]
+  },
+
+  "checklist schedule":
+  {
+    "name" : "Copy Checklist <name> at <scheduled time> for client <name>",
+    "meta": {
+      "client": "",
+      "from": "checklist"
+    },
+    "schedule" : "/5 * * ? * *",
+    "actions": [
+      {
+        "type" : "HttpRequestAction",
+        "name" : "POST - Copy Checklist",
+        "method" : "POST",
+        "url" : "http://localhost:8081/checklist/id/copy",
+        "body": ""
+      }
+    ]
+  }
+}
