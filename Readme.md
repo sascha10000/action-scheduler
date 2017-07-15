@@ -16,7 +16,17 @@ At the moment there is no authentication and https built in but it will be added
 | POST /test/action       | One or a chain of actions            | Executes a given action or chain of actions (Just for testing purposes).
 
 ### A simple HTTP-Request-Action
-First a use-case will be shown to implement it with the action-scheduler.
+The following diagramm shows how *actions* will be represented inside the *JSON* definition and how the connection and 
+dataflow is interpreted by the service.
+![Action Diagram](/img/actions_diagram.png)
+The *actions* are organized in a tree structure which means that there are no "same level" connections, shown by the
+connections marked with an "X". The dataflow between actions is implemented throughout the mapping which is defined in
+an own class which means that the actions regarding to the data are not entangled. The dataflow is implemented through
+the **AbstractMapper** implementations. In this special case the **HttpResponseMapper**. It is also possible to enhance
+the List of mappers and allow the dataflow from actions on the same level which would result in a graph structure regarding
+ the dataflow.
+
+First a use-case will be shown as an example to implement it with the action-scheduler.
 A user-service which manages user-data in a profile like manner, needs to be tested regularly.
 Therefore some test data is needed. Step 1 is getting some data and then post it to the service.
 
@@ -35,7 +45,7 @@ To *GET* user-data the service of [Fake-User-Data-Api](https://randomuser.me/api
 The type defines which *Action* will be used at runtime, the **name** can be freely chosen the **method** and **url** are defined as stated in RFC2616 with a
 small limitation regarding to the methods. Only a subset is available GET, POST, PUT, DELETE and HEAD.
 
-The aquired data will now be posted to the service (assumed at localhost/person). Therefore:
+The acquired data will now be posted to the service (assumed at localhost/person). Therefore:
 ```json
 {
     "type" : "HttpRequestAction",

@@ -96,24 +96,5 @@
         "next" : [ ]
       }
     ]
-  },
-
-  "checklist schedule":
-  {
-    "name" : "Copy Checklist <name> at <scheduled time> for client <name>",
-    "meta": {
-      "client": "",
-      "from": "checklist"
-    },
-    "schedule" : "/5 * * ? * *",
-    "actions": [
-      {
-        "type" : "HttpRequestAction",
-        "name" : "POST - Copy Checklist",
-        "method" : "POST",
-        "url" : "http://localhost:8081/checklist/id/copy",
-        "body": ""
-      }
-    ]
   }
 }
