@@ -17,9 +17,9 @@ scalacOptions in (Compile,doc) := Seq("-groups", "-implicits")
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies := Seq(
-  "io.vertx" % "vertx-web-scala_2.12" % "3.4.1",
-  "io.vertx" % "vertx-web-client-scala_2.12" % "3.4.1",
-  "io.vertx" %% "vertx-mongo-client-scala" % "3.4.1",
+  "io.vertx" % "vertx-web-scala_2.12" % "3.4.2",
+  "io.vertx" % "vertx-web-client-scala_2.12" % "3.4.2",
+  "io.vertx" %% "vertx-mongo-client-scala" % "3.4.2",
   "org.scalactic" %% "scalactic" % "3.0.1",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   "com.jayway.jsonpath" % "json-path" % "2.2.0",

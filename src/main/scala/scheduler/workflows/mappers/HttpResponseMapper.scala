@@ -44,7 +44,7 @@ class HttpResponseMapper(val action:HttpRequestAction, override val input:Option
     val inAction = this.inAction.get.asInstanceOf[HttpRequestAction]
     val jsonar = new JsonArray(action.mappings.get)
 
-    jsonar.asScala.foldLeft(action)((prev, f) => {
+    val ret = jsonar.asScala.foldLeft(action)((prev, f) => {
       val mapping = f.asInstanceOf[JsonObject]
       val from = mapping.asOption[String]("from")
       val to = mapping.asOption[JsonObject]("to")
@@ -140,8 +140,12 @@ class HttpResponseMapper(val action:HttpRequestAction, override val input:Option
       else
         action
     })
+    if(scheduler.VERBOSE) println(ret)
+    ret
   }
   else {
+    if(scheduler.VERBOSE) println(action)
+
     action
   }
 }

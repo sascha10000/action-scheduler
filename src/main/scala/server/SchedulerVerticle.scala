@@ -1,5 +1,6 @@
 package server
 
+import helper.AuthHelper
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.{LoggerFactory, SLF4JLogDelegateFactory}
@@ -7,7 +8,8 @@ import io.vertx.scala.ext.web.handler.CorsHandler
 import io.vertx.lang.scala.{ScalaVerticle, VertxExecutionContext}
 import io.vertx.scala.core.Vertx
 import io.vertx.scala.ext.mongo.MongoClient
-import io.vertx.scala.ext.web.Router
+import io.vertx.scala.ext.web.client.WebClient
+import io.vertx.scala.ext.web.{Router, RoutingContext}
 import org.quartz.impl.StdSchedulerFactory
 import scheduler.SchedulerJob
 
@@ -27,6 +29,11 @@ class SchedulerVerticle extends ScalaVerticle {
   //val execContext = VertxExecutionContext(vertx.getOrCreateContext())
   val globalScheduler = StdSchedulerFactory.getDefaultScheduler
 
+  def routeLogger(rc:RoutingContext, f:RoutingContext => Unit): Unit = {
+    println(rc.currentRoute())
+    f(rc)
+  }
+
   override def start(): Unit = {
     val router = Router.router(vertx)
     val mongoDb = MongoClient.createShared(vertx, customConfig)
@@ -40,7 +47,7 @@ class SchedulerVerticle extends ScalaVerticle {
       .allowedMethod(HttpMethod.PUT)
       .allowedMethod(HttpMethod.DELETE)
       .allowedMethod(HttpMethod.OPTIONS)
-      .allowedHeader("token")
+      .allowedHeader("Authorization")
       .allowedHeader("content-type"))
 
     // adds all routes defined in the SchedulerRoutes
@@ -48,9 +55,21 @@ class SchedulerVerticle extends ScalaVerticle {
       override val mongoDB: MongoClient = mongoDb
       override val scheduler = globalScheduler
       override val execContext = executionContext
+      override val authHelper: AuthHelper = new AuthHelper(WebClient.create(vertx))
     }
 
-    schedulerRoutes.routes.foreach(f => router.route(f._1, f._2).handler((rc) => f._3(rc)))
+    router.route().handler(g => {
+      println("REQUEST")
+      println(g.request().rawMethod()+"@" + g.request().absoluteURI())
+      g.request().bodyHandler(h => println(h))
+      g.next()
+    })
+
+    schedulerRoutes.routes.foreach(f => router.route(f._1, f._2).handler(rc => f._3(rc)))
+    // on non matching routes
+    router.route("/*").handler(g => {
+      g.response().setStatusCode(404).end()
+    })
 
     println(schedulerRoutes.routes)
 
@@ -64,7 +83,7 @@ class SchedulerVerticle extends ScalaVerticle {
         val jobs = result.map(f => {
           // converts json to SchedulerJob class
           val schedulerJob = SchedulerJob(f)
-          schedulerJob.scheduleJob(globalScheduler)
+          schedulerJob.scheduleJob()(globalScheduler)
           schedulerJob
         })
       }

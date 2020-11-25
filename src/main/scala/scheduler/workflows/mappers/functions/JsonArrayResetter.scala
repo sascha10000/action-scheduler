@@ -17,7 +17,7 @@ class JsonArrayResetter(in:String, args:Map[String, Any]) extends AbstractFuncti
     val array = json.getJsonArray(arrayName)
     json.remove(arrayName)
 
-    val newObjects = for (i <- 0 until array.size()) yield array.getJsonObject(i).mergeIn(resetJson)
+    val newObjects = for (i <- 0 until array.size()) yield array.getJsonObject(i).mergeIn(resetJson, true)
     val newArray = newObjects.foldLeft(new JsonArray())((prev, el) => prev.add(el))
 
     json.put(arrayName, newArray).encode()

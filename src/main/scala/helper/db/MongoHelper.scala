@@ -30,6 +30,10 @@ object MongoHelper {
     rc.response().setStatusCode(404)
     rc.response().end(new JsonObject().put("errMsg", msg).encode())
   }
+  def handleErr(rc:RoutingContext, statusCode:Int,msg:String) = {
+    rc.response().setStatusCode(statusCode)
+    rc.response().end(new JsonObject().put("errMsg", msg).encode())
+  }
 
   def tryOne(rc:RoutingContext, op:(OneJ) => String): One = {
     case Success(result) => rc.response().end(op(result))
